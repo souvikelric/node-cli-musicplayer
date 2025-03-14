@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import fsNorm from "node:fs";
 import path from "path";
 import readline from "readline";
+import ytdl from "ytdl-core";
 let homeDir = process.argv[1].split("/").slice(0, -2).join("/");
 let packageData;
 packageData = JSON.parse(await fs.readFile(path.join(homeDir, "package.json"), "utf-8"));
@@ -25,18 +26,24 @@ async function loadPlayList() {
 // console.log("Songs are :", songs);
 function addSong(name, url) {
     console.log(name, url);
+    downloadAudio(name, url);
 }
 async function listSongs() {
     let songs = await loadPlayList();
     console.log(songs);
 }
 function downloadAudio(name, url) {
-    console.log("downloading");
+    const filePath = path.join(__dirname, "music", `${name}.mp3`);
+    ytdl(url, { filter: "audioonly" })
+        .pipe(fsNorm.createWriteStream(filePath))
+        .on("finish", () => {
+        console.log(`Downloaded "${name}".`);
+    });
 }
 function playAudio(name) {
     console.log("playing");
 }
-rl.question("Enter command (add, list, download, play, exit): ", (command) => {
+rl.question("Enter command (add, list, play, exit): ", (command) => {
     switch (command) {
         case "add":
             rl.question("Song name: ", (name) => {
@@ -49,14 +56,6 @@ rl.question("Enter command (add, list, download, play, exit): ", (command) => {
         case "list":
             listSongs();
             rl.close();
-            break;
-        case "download":
-            rl.question("Song name: ", (name) => {
-                rl.question("YouTube link: ", (url) => {
-                    downloadAudio(name, url);
-                    rl.close();
-                });
-            });
             break;
         case "play":
             rl.question("Enter song name to play: ", (name) => {
