@@ -21,6 +21,54 @@ async function loadPlayList() {
     let music_data = JSON.parse((await fs.readFile(path.join(homeDir, "playlist.json"))).toString());
     return music_data.songs;
 }
-let songs = await loadPlayList();
-console.log("Songs are :", songs);
-process.exit();
+// let songs = await loadPlayList();
+// console.log("Songs are :", songs);
+function addSong(name, url) {
+    console.log(name, url);
+}
+async function listSongs() {
+    let songs = await loadPlayList();
+    console.log(songs);
+}
+function downloadAudio(name, url) {
+    console.log("downloading");
+}
+function playAudio(name) {
+    console.log("playing");
+}
+rl.question("Enter command (add, list, download, play, exit): ", (command) => {
+    switch (command) {
+        case "add":
+            rl.question("Song name: ", (name) => {
+                rl.question("YouTube link: ", (url) => {
+                    addSong(name, url);
+                    rl.close();
+                });
+            });
+            break;
+        case "list":
+            listSongs();
+            rl.close();
+            break;
+        case "download":
+            rl.question("Song name: ", (name) => {
+                rl.question("YouTube link: ", (url) => {
+                    downloadAudio(name, url);
+                    rl.close();
+                });
+            });
+            break;
+        case "play":
+            rl.question("Enter song name to play: ", (name) => {
+                playAudio(name);
+                rl.close();
+            });
+            break;
+        case "exit":
+            rl.close();
+            break;
+        default:
+            console.log("Unknown command.");
+            rl.close();
+    }
+});
