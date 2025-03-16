@@ -33,8 +33,8 @@ async function addSong(name, url) {
     if (!musicFolderExists) {
         await fs.mkdir(path.join(homeDir, "music"));
     }
-    let newPath = downloadAudio(name, url);
-    savePlayList(name, newPath);
+    downloadAudio(name, url);
+    //savePlayList(name, newPath);
 }
 async function listSongs() {
     let songs = await loadPlayList();
@@ -42,14 +42,14 @@ async function listSongs() {
 }
 function downloadAudio(name, url) {
     const filePath = path.join(homeDir, "music");
-    // ytdl(url, { filter: "audioonly" })
-    //   .pipe(fsNorm.createWriteStream(filePath))
-    //   .on("finish", () => {
-    //     console.log(`Downloaded "${name}".`);
-    //   });
     const downloader = new Downloader({ getTags: true, outputDir: filePath });
-    downloader.downloadSong(url);
-    return filePath;
+    downloader
+        .downloadSong(url)
+        .then((data) => console.log(data))
+        .catch((err) => console.log("failed to download"));
+    // output
+    //   .then((data) => console.log(data.outputFile, data.artist))
+    //   .catch((err) => console.log(err));
 }
 function playAudio(name) {
     console.log("playing");
