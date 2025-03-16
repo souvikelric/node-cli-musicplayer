@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import fsNorm from "node:fs";
 import path from "path";
 import readline from "readline";
-import ytdl from "ytdl-core";
+import { Downloader, DownloaderOptions } from "ytdl-mp3";
 
 type packageJson = {
   name: string;
@@ -41,12 +41,21 @@ async function loadPlayList() {
   );
   return music_data.songs;
 }
-// let songs = await loadPlayList();
-// console.log("Songs are :", songs);
 
-function addSong(name: string, url: string) {
-  console.log(name, url);
-  downloadAudio(name, url);
+async function savePlayList(name: string, fileUrl: string) {
+  let oldSongs = await loadPlayList();
+  oldSongs.push({ name: name, url: fileUrl });
+  console.log(`Song ${name} added at path ${fileUrl}`);
+}
+
+async function addSong(name: string, url: string) {
+  // check if music folder exists
+  let musicFolderExists = fsNorm.existsSync(path.resolve(homeDir, "music"));
+  if (!musicFolderExists) {
+    await fs.mkdir(path.join(homeDir, "music"));
+  }
+  let newPath = downloadAudio(name, url);
+  savePlayList(name, newPath);
 }
 
 async function listSongs() {
@@ -55,12 +64,15 @@ async function listSongs() {
 }
 
 function downloadAudio(name: string, url: string) {
-  const filePath = path.join(__dirname, "music", `${name}.mp3`);
-  ytdl(url, { filter: "audioonly" })
-    .pipe(fsNorm.createWriteStream(filePath))
-    .on("finish", () => {
-      console.log(`Downloaded "${name}".`);
-    });
+  const filePath = path.join(homeDir, "music");
+  // ytdl(url, { filter: "audioonly" })
+  //   .pipe(fsNorm.createWriteStream(filePath))
+  //   .on("finish", () => {
+  //     console.log(`Downloaded "${name}".`);
+  //   });
+  const downloader = new Downloader({ getTags: true, outputDir: filePath });
+  downloader.downloadSong(url);
+  return filePath;
 }
 
 function playAudio(name: string) {

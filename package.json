@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "play-sound": "^1.1.6",
-    "ytdl-core": "^4.11.5"
+    "ytdl-mp3": "^5.2.2"
   }
 }

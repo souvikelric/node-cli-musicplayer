@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import fsNorm from "node:fs";
 import path from "path";
 import readline from "readline";
-import ytdl from "ytdl-core";
+import { Downloader } from "ytdl-mp3";
 let homeDir = process.argv[1].split("/").slice(0, -2).join("/");
 let packageData;
 packageData = JSON.parse(await fs.readFile(path.join(homeDir, "package.json"), "utf-8"));
@@ -22,23 +22,34 @@ async function loadPlayList() {
     let music_data = JSON.parse((await fs.readFile(path.join(homeDir, "playlist.json"))).toString());
     return music_data.songs;
 }
-// let songs = await loadPlayList();
-// console.log("Songs are :", songs);
-function addSong(name, url) {
-    console.log(name, url);
-    downloadAudio(name, url);
+async function savePlayList(name, fileUrl) {
+    let oldSongs = await loadPlayList();
+    oldSongs.push({ name: name, url: fileUrl });
+    console.log(`Song ${name} added at path ${fileUrl}`);
+}
+async function addSong(name, url) {
+    // check if music folder exists
+    let musicFolderExists = fsNorm.existsSync(path.resolve(homeDir, "music"));
+    if (!musicFolderExists) {
+        await fs.mkdir(path.join(homeDir, "music"));
+    }
+    let newPath = downloadAudio(name, url);
+    savePlayList(name, newPath);
 }
 async function listSongs() {
     let songs = await loadPlayList();
     console.log(songs);
 }
 function downloadAudio(name, url) {
-    const filePath = path.join(__dirname, "music", `${name}.mp3`);
-    ytdl(url, { filter: "audioonly" })
-        .pipe(fsNorm.createWriteStream(filePath))
-        .on("finish", () => {
-        console.log(`Downloaded "${name}".`);
-    });
+    const filePath = path.join(homeDir, "music");
+    // ytdl(url, { filter: "audioonly" })
+    //   .pipe(fsNorm.createWriteStream(filePath))
+    //   .on("finish", () => {
+    //     console.log(`Downloaded "${name}".`);
+    //   });
+    const downloader = new Downloader({ getTags: true, outputDir: filePath });
+    downloader.downloadSong(url);
+    return filePath;
 }
 function playAudio(name) {
     console.log("playing");
